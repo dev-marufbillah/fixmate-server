@@ -1,6 +1,21 @@
-import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 
-dotenv.config();
+// Tiny .env loader (no dotenv dependency) — local dev reads .env;
+// Vercel/production supplies real environment variables.
+try {
+  const envPath = path.join(process.cwd(), ".env");
+  if (fs.existsSync(envPath)) {
+    for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
+      const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+      if (m && process.env[m[1]] === undefined) {
+        process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+      }
+    }
+  }
+} catch {
+  /* no .env — use process.env as-is */
+}
 
 function str(name: string, fallback: string): string {
   return (process.env[name] || fallback).trim();
