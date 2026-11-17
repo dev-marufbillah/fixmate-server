@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { Filter, Sort } from "mongodb";
-import { serviceCol } from "../lib/db";
+import { serviceCol, userCol } from "../lib/db";
 import { ServiceDoc } from "../types";
 import { verifyToken, verifyTechnician, AuthedRequest } from "../middlewares/auth";
 import { asyncHandler, ok, fail, ApiError, parseId, escapeRegex, requireBody } from "../utils/http";
@@ -82,7 +82,24 @@ router.get(
       isAvailable: true,
     });
     if (!service) throw new ApiError(404, "Service not found");
-    ok(res, { service });
+
+    // Join a light technician profile for the details page (photo, area, bio).
+    const tech = await userCol().findOne(
+      { email: service.technicianEmail },
+      { projection: { name: 1, image: 1, area: 1, bio: 1, email: 1 } }
+    );
+
+    ok(res, {
+      service,
+      technician: tech
+        ? {
+            name: tech.name,
+            image: tech.image || null,
+            area: tech.area || "",
+            bio: tech.bio || "",
+          }
+        : { name: service.technicianName, image: null, area: service.serviceArea, bio: "" },
+    });
   })
 );
 

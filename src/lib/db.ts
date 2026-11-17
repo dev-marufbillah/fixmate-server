@@ -32,7 +32,7 @@ export async function ensureIndexes(): Promise<void> {
     paymentCol().createIndex({ stripeSessionId: 1 }, { unique: true }),
     paymentCol().createIndex({ customerEmail: 1, paidAt: -1 }),
     paymentCol().createIndex({ bookingId: 1 }),
-    userCol().createIndex({ email: 1 }, { unique: true }),
+    // The users collection (owned by BetterAuth) gets its own email index from the adapter.
   ]);
 }
 

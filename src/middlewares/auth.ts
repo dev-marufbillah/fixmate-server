@@ -45,11 +45,14 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
 }
 
 function requireRole(...roles: Role[]) {
+  // Standalone: verifies the token itself (401) and then the role (403),
+  // so it works alone or after an explicit verifyToken.
   return (req: Request, res: Response, next: NextFunction) => {
-    const user = (req as AuthedRequest).user;
+    const user = authenticate(req);
     if (!user) {
       return res.status(401).json({ success: false, message: "Unauthorized: missing or invalid token" });
     }
+    (req as AuthedRequest).user = user;
     if (!roles.includes(user.role)) {
       return res.status(403).json({ success: false, message: `Forbidden: requires role ${roles.join(" or ")}` });
     }
